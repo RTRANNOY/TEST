@@ -1,0 +1,75 @@
+<html>
+<head>
+  <title>Carte des agences PE</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.1.0/dist/leaflet.css" integrity="sha512-wcw6ts8Anuw10Mzh9Ytw4pylW8+NAD4ch3lqm9lzAsTxg0GFeJgoAtxuCLREZSC5lUXdVyo/7yfsqFjQ4S+aKw==" crossorigin=""/>
+  <link rel="stylesheet" href="https://raw.githubusercontent.com/RTRANNOY/TEST/master/src/MarkerCluster.css" />
+  <script src="https://unpkg.com/leaflet@1.1.0/dist/leaflet.js" integrity="sha512-mNqn2Wg7tSToJhvHcqfzLMU6J4mkOImSPTxVZAdo+lcPlk+GhZmYgACEe0x35K7YzW1zJ7XyJV/TT1MrdXvMcA==" crossorigin=""></script>
+  <script src="https://raw.githubusercontent.com/RTRANNOY/TEST/master/src/leaflet.markercluster.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>  
+  
+  
+  <style>
+    #map{ height: 100% }
+  </style>
+</head>
+<body>
+ 
+  <div id="map"></div>
+ 
+  <script>
+ 
+  // initialize the map
+
+  var map = L.map('map').setView([46.8, 2.395], 6); 
+  // load a tile layer
+  L.tileLayer('https://maps.pole-emploi.fr/styles/klokantech-basic/{z}/{x}/{y}.png',
+    {
+      attribution: 'Tiles by <a href="https://maps.pole-emploi.fr">MAPC</a>, Data by <a href="https://maps.pole-emploi.fr">MassGIS</a>',
+      maxZoom: 17,
+      minZoom: 0
+    }).addTo(map);
+    
+
+	
+  $.getJSON("https://raw.githubusercontent.com/RTRANNOY/TEST/master/DR/DR.json",function(hoodData){
+    L.geoJson( hoodData, {
+      style: function(feature){
+        var fillColor,
+            density = feature.properties.density;
+        if ( density > 80 ) fillColor = "#006837";
+        else if ( density > 60 ) fillColor = "#31a354";
+        else if ( density > 40 ) fillColor = "#78c679";
+        else if ( density > 20 ) fillColor = "#c2e699";
+        else if ( density > 0 ) fillColor = "#ffffcc";
+        else fillColor = "#f7f7f7";  // no data
+        return { color: "#999", weight: 1, fillColor: fillColor, fillOpacity: .6 };
+      },	  
+ 
+      onEachFeature: function( feature, layer ){
+        layer.bindPopup( "<strong><p>Direction régional <b>" + feature.properties.Code_AURORE_DR + " " + feature.properties.Code_AURORE_DT )
+      }
+    }).addTo(map);
+  });
+ 
+
+  $.getJSON("https://raw.githubusercontent.com/RTRANNOY/TEST/master/agence_point.json",function(data){
+    var ratIcon = L.icon({
+      iconUrl: 'https://raw.githubusercontent.com/RTRANNOY/TEST/master/Pole_emploie.png',
+      iconSize: [12,16]
+    });
+    var rodents = L.geoJson(data,{
+      pointToLayer: function(feature,latlng){
+        var marker = L.marker(latlng,{icon: ratIcon});
+        marker.bindPopup(feature.properties.libelle + '<br/>' + feature.properties.Adresse);
+        return marker;
+      }
+    });
+    var clusters = L.markerClusterGroup();
+    clusters.addLayer(rodents);
+    map.addLayer(clusters);
+  }); 
+
+ 
+  </script>
+</body>
+</html>
